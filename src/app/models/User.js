@@ -1,4 +1,5 @@
 import Sequelize, { Model } from 'sequelize';
+import bcrypt from 'bcryptjs';
 
 class User extends Model {
   // -> classe que sera automaticamente chamada na inicializacao
@@ -6,8 +7,10 @@ class User extends Model {
     super.init(
       {
         // -> os campos abaixo representao quais receberao dados ou alteracoes
+        // -> O Campo password é virtual e nao esta presente no model de User
         name: Sequelize.STRING,
         email: Sequelize.STRING,
+        password: Sequelize.VIRTUAL,
         password_hash: Sequelize.STRING,
         provider: Sequelize.BOOLEAN,
       },
@@ -15,6 +18,13 @@ class User extends Model {
         sequelize,
       }
     );
+    // -> Metodo antes de salvar
+    this.addHook('beforeSave', async user => {
+      if (user.password) {
+        user.password_hash = await bcrypt.hash(user.password, 8);
+      }
+    });
+    return this;
   }
 }
 export default User;

@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+import { startOfHour, parseISO, isBefore } from 'date-fns';
 import User from '../models/User';
 import Appointment from '../models/Appointment';
 
@@ -29,6 +30,34 @@ class AppointmentController {
         error: 'Você só pode criar agendamentos com provedores de serviços.',
       });
     }
+    //
+    // -> Chegagem de Horarios
+    //
+    // parseIso tranforma a string repassada em um objeto em um date do javascript
+    // o startofhour pega o inicio da hora, se tiver 19:30 ele vai pegar 19:00..
+    const hourStart = startOfHour(parseISO(date));
+    // -> hourStart esta antes da data atual?
+    if (isBefore(hourStart, new Date())) {
+      return res
+        .status(400)
+        .json({ error: 'Datas anteriores não são permitidas' });
+    }
+    //
+    // -> Agendamento no mesmo horario?
+    const checkAvailability = await Appointment.findOne({
+      where: {
+        provider_id,
+        canceled_at: null,
+        date: hourStart,
+      },
+    });
+    // -> se ele encontrou o agendamento significa que o horarios NÃO está vago..
+    if (checkAvailability) {
+      return res
+        .status(400)
+        .json({ error: 'A data do agendamento não está disponível.' });
+    }
+    //
     // -> Se passou por todas as validacoes agora sim é criado o agendamento
     const appointment = await Appointment.create({
       user_id: req.userId,

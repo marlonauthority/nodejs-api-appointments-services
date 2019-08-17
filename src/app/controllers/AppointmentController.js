@@ -59,6 +59,12 @@ class AppointmentController {
         error: 'Você só pode criar agendamentos com provedores de serviços.',
       });
     }
+    // -> Checar se quem esta fazendo o agendamento seja diferente do id prestador, ou seja um prestador nao pode fazer um agendamento para ele mesmo
+    if (provider_id === req.userId) {
+      return res.status(401).json({
+        error: 'Não é possível marcar um agendamento para você mesmo.',
+      });
+    }
     //
     // -> Chegagem de Horarios
     //

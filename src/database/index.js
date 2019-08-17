@@ -1,4 +1,5 @@
 import Sequelize from 'sequelize';
+import mongoose from 'mongoose';
 import User from '../app/models/User';
 import File from '../app/models/File';
 import Appointment from '../app/models/Appointment';
@@ -12,6 +13,7 @@ class Database {
   //   as funcoes repassadas para ele serao automaticamente executadas
   constructor() {
     this.init();
+    this.mongo();
   }
 
   init() {
@@ -23,6 +25,14 @@ class Database {
       .map(model => model.init(this.connection))
       // um segundo map criado para associar model de user com files, porem so é executado no model que existir a funcao "associate"
       .map(model => model.associate && model.associate(this.connection.models));
+  }
+
+  // Banco de dados Mongo
+  mongo() {
+    this.mongoConnection = mongoose.connect(
+      'mongodb://localhost:27017/gobarber',
+      { useNewUrlParser: true, useFindAndModify: true }
+    );
   }
 }
 

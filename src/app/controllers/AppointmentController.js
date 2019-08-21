@@ -125,6 +125,7 @@ class AppointmentController {
         },
       ],
     });
+    // return res.json(appointment);
     // -> caso quem esta tentando cancelar o agendamento nao for o dono do agendamento..
     if (appointment.user_id !== req.userId) {
       return res.status(401).json({
@@ -157,6 +158,7 @@ class AppointmentController {
     //
     // -> Beleza, agendamento feito que tal uma notificação para o prestador de servico
     const user = await User.findByPk(req.userId);
+    // return res.json(user);
     const formatedDate = format(
       appointment.date,
       "'dia' dd 'de' MMMM', para às' H'h'",
@@ -173,7 +175,13 @@ class AppointmentController {
     await Mail.sendMail({
       to: `${appointment.provider.name} <${appointment.provider.email}>`,
       subject: 'Agendamento foi cancelado',
-      text: `${user.name}, cancelou o agendamento do ${formatedDate}`,
+      // text: `${user.name}, cancelou o agendamento do ${formatedDate}`,
+      template: 'cancelation',
+      context: {
+        provider: appointment.provider.name,
+        user: user.name,
+        date: formatedDate,
+      },
     });
 
     return res.json(appointment);

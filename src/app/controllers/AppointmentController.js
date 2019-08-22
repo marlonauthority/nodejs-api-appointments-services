@@ -5,7 +5,8 @@ import User from '../models/User';
 import File from '../models/File';
 import Appointment from '../models/Appointment';
 import Notification from '../schemas/Notification';
-import Mail from '../../lib/Mail';
+import Queue from '../../lib/Queue';
+import CancellationMail from '../jobs/CancellationMail';
 
 class AppointmentController {
   async index(req, res) {
@@ -123,6 +124,11 @@ class AppointmentController {
           as: 'provider',
           attributes: ['name', 'email'],
         },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['name'],
+        },
       ],
     });
     // return res.json(appointment);
@@ -172,16 +178,8 @@ class AppointmentController {
     });
     //
     // Envia um email tambem avisando o cancelamento
-    await Mail.sendMail({
-      to: `${appointment.provider.name} <${appointment.provider.email}>`,
-      subject: 'Agendamento foi cancelado',
-      // text: `${user.name}, cancelou o agendamento do ${formatedDate}`,
-      template: 'cancelation',
-      context: {
-        provider: appointment.provider.name,
-        user: user.name,
-        date: formatedDate,
-      },
+    await Queue.add(CancellationMail.key, {
+      appointment,
     });
 
     return res.json(appointment);

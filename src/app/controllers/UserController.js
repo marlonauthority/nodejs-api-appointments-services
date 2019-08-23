@@ -1,5 +1,6 @@
 import * as Yup from 'yup';
 import User from '../models/User';
+import File from '../models/File';
 
 class UserController {
   async store(req, res) {
@@ -81,14 +82,24 @@ class UserController {
     }
 
     // se passou pelas verificacoes, att o user
-    const { id, name, provider } = await user.update(req.body);
+    await user.update(req.body);
+    // como ouve uma atualizacao precisamos refazer a query para que retorne os dados ja atualizados
+    const { id, name, avatar } = await User.findByPk(req.userId, {
+      include: [
+        {
+          model: File,
+          as: 'avatar',
+          attributes: ['id', 'path', 'url'],
+        },
+      ],
+    });
 
     // -> Retorna os dados repassados
     return res.json({
       id,
       name,
       email,
-      provider,
+      avatar,
     });
   }
 }

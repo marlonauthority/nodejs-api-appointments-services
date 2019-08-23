@@ -1,11 +1,12 @@
 import express from 'express';
 import path from 'path';
-import * as Sentry from '@sentry/node';
-import sentryConfig from './config/sentry';
-import routes from './routes';
+import Youch from 'youch';
 // -> para ouvir o erros alem do sentry precisamos ouvir os erros que vem dos controllers que usam async
 // por padrao o express nao ouve.. dai usaremos a extensao abaixo
 import 'express-async-errors';
+import * as Sentry from '@sentry/node';
+import sentryConfig from './config/sentry';
+import routes from './routes';
 //
 // -> Chama um loader de models para o DB
 import './database';
@@ -19,6 +20,8 @@ class App {
 
     this.middlewares();
     this.routes();
+    // -> Middleware para tratamento de exceções (erros)
+    this.exceptionHandler();
   }
 
   middlewares() {
@@ -37,6 +40,13 @@ class App {
     this.server.use(routes);
     // para finalizar o sentry colocamos a function por volta das rotas a serem ouvidas
     this.server.use(Sentry.Handlers.errorHandler());
+  }
+
+  exceptionHandler() {
+    this.server.use(async (err, req, res, next) => {
+      const errors = await new Youch(err, req).toJSON();
+      return res.status(500).json(errors);
+    });
   }
 }
 

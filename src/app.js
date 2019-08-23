@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
+import cors from 'cors';
 import Youch from 'youch';
 // -> para ouvir o erros alem do sentry precisamos ouvir os erros que vem dos controllers que usam async
 // por padrao o express nao ouve.. dai usaremos a extensao abaixo
@@ -28,6 +29,8 @@ class App {
   middlewares() {
     // -> antes de todas as chamadas de rotas chamamos o funcao do sentry
     this.server.use(Sentry.Handlers.requestHandler());
+    // -> Cross access origin
+    this.server.use(cors());
     // -> Habilita o uso de JSON
     this.server.use(express.json());
     // -> Habilita o acesso aos Files da pasta tmp
